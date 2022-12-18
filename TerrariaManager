@@ -1,0 +1,224 @@
+#!/bin/bash
+# AHMZA
+# 17/12/2022
+# Manage Terraria Servers
+
+main() {
+  checkFlags $@
+
+  if [ $vFlag ]
+  then
+    echo "Using Terraria Ver: $VER"
+  else  
+    VER=1449
+  fi
+
+  if [ $wFlag ]
+  then
+    echo "Terraria Server Name: $WORLDNAME"
+  else
+    err "No World name provided"
+    exit
+  fi
+
+  # Location of Terraria files
+  TERDIR=/home/ahmza/terraria/$WORLDNAME/$VER
+
+  # Tmux session ID
+  SESSION=terraria-$WORLDNAME
+
+  # Server executable
+  SERVER=${TERDIR}/TerrariaServer.bin.x86_64
+
+  # Server Config
+  CONFIG=${TERDIR}/server.cfg
+
+  if [ $sFlag ]
+  then
+    start
+  fi
+
+  if [ $qFlag ]
+  then
+    quit
+  fi
+
+  if [ $rFlag ]
+  then
+    restart
+  fi
+
+  if [ $cFlag ]
+  then
+    create
+  fi
+  
+  if [ $RFlag ]
+  then
+    remove
+  fi
+}
+
+checkFlags() {
+  sFlag=''
+  qFlag=''
+  rFlag=''
+  cFlag=''
+  RFlag=''
+  vFlag=''
+  wFlag=''
+
+  while getopts ":sqrcRvw:" flag; do
+    case $flag in
+      s)sFlag='true' ;;
+      q)qFlag='true' ;;
+      r)rFlag='true' ;;
+      c)cFlag='true' ;;
+      R)RFlag='true' ;;
+      v)vFlag='true' ;
+        VER="$OPTARG" ;;
+      w)wFlag='true' ;
+        WORLDNAME="$OPTARG" ;;
+      *)help
+        exit 2 ;;
+    esac
+  done
+}
+
+# a function to print out error messages
+err() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
+}
+
+create() {
+  if [ -d $TERDIR ]
+  then
+    err "Server already exists"
+  else
+    echo "Creating Server..."
+    cp -r /home/ahmza/terraria/template /home/ahmza/terraria/$WORLDNAME
+    echo "Server Created"
+    echo "Modify server.cfg before running"
+
+    read -p "Server Port: " PORT
+    read -p "Message of the day: " MOTD
+    read -p "World Size (1:Small, 2:Medium, 3:Large): " WSIZE
+    read -p "Difficulty (0:Normal, 1:Expert, 2:Master, 3:Journey): " DIFF
+    read -p "Seed: " SEED
+    read -p "Max Players (1-255): " MAXPLAYERS
+    read -p "Server Password: " PASSWORD
+
+    touch $CONFIG
+    echo "world=$HOME/.local/share/Terraria/Worlds/$WORLDNAME" >> $CONFIG
+    echo "port=$PORT" >> $CONFIG
+    echo "upnp=0" >> $CONFIG
+    echo "motd=$MOTD" >> $CONFIG
+    echo "autocreate=$WSIZE" >> $CONFIG
+    echo "worldname=$WORLDNAME" >> $CONFIG
+    echo "difficulty=$DIFF" >> $CONFIG
+    echo "seed=$SEED" >> $CONFIG
+    echo "maxplayers=$MAXPLAYERS" >> $CONFIG
+    echo "npcstream=60" >> $CONFIG
+    echo "priority=1" >> $CONFIG
+    echo "password=$PASSWORD" >> $CONFIG
+    echo "banlist=banlist.txt" >> $CONFIG
+    echo "secure=0" >> $CONFIG
+    echo "worldpath=$HOME/.local/share/Terraria/Worlds" >> $CONFIG
+    echo "language=en-US" >> $CONFIG
+
+    while true; do
+      read -p "Would you like to start server: $WORLDNAME (y/n) " yn
+      case $yn in
+        [yY])
+          start ;
+          break ;;
+        [nN])
+          exit ;;
+        *)
+          err "invalid response" ;;
+      esac
+    done
+    exit 0
+  fi
+}
+
+remove() {
+  if [ -d $TERDIR ]
+  then
+    echo "Removing Server..."
+    quit
+    rm -r /home/ahmza/terraria/$WORLDNAME
+    rm -r /home/ahmza/.local/share/Terraria/Worlds/$WORLDNAME.*
+    echo "Removed Server"
+    exit 0
+  else
+    err "Nothing to remove"
+  fi
+}
+
+start() {
+  ARGS="-config ${CONFIG}"
+  CMD="${SERVER} ${ARGS}"
+
+  if [ -d $TERDIR ]
+  then
+    if tmux has-session -t $SESSION
+    then
+      echo "Starting Terraria Server $WORLDNAME... "
+      tmux send-keys -t ${SESSION} "$CMD" C-m
+      echo "Server started"
+    else
+      echo "Starting Terraria Server $WORLDNAME... "
+      tmux new-session -d -s $SESSION
+      tmux send-keys -t ${SESSION} "$CMD" C-m
+      echo "Server started"
+    fi
+  else
+    echo "Server does not exist"
+    while true; do
+      read -p "Would you like to create it (y/n) " yn
+      case $yn in
+        [yY])
+          create ;
+          break ;;
+        [nN])
+          exit ;;
+        *)
+          err "invalid response" ;;
+      esac
+    done
+  fi
+}
+
+quit() {
+  if tmux has-session -t $SESSION
+  then
+    tmux send-keys -t ${SESSION} "exit" C-m
+    echo "Stopped Server $WORLDNAME"
+  else
+    echo "Server not running"
+  fi
+}
+
+restart() {
+  quit
+  start
+}
+
+help() {
+  echo "Manage Terraria Servers"
+  echo
+  echo "Syntax: $0 [options] [worldname] [version]"
+  echo "[version] is optional. Defaults to 1449"
+  echo
+  echo "Options:"
+  echo "-s    Start the server"
+  echo "-q    Quit the server"
+  echo "-r    Restart the server"
+  echo "-c    Create a new server"
+  echo "-R    Remove an existing server"
+  echo "-w    Names of worlds/servers"
+  echo
+}
+
+main $@
