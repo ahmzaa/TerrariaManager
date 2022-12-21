@@ -17,6 +17,6 @@ This tool has been written and tested on Linux.
 I will test using MacOS and WSL soon.
 
 ## Roadmap
-- [] Server Version Control
-- [] Check Server Status
-- [] Default options for server creation (if user leaves blank)
+- [ ] Server Version Control
+- [ ] Check Server Status
+- [ ] Default options for server creation (if user leaves blank)
