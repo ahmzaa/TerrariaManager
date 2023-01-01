@@ -1,9 +1,39 @@
 #!/bin/bash
+#
 # AHMZA
-# 17/12/2022
 # Manage Terraria Servers
 
-main() {
+#######################################
+# Used when printing error messages
+#######################################
+err() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
+}
+
+#######################################
+# When the script is called. This is the "main" function.
+# Globals:
+#   VER
+#   TERDIR
+#   SESSION
+#   CONFIG
+# Arguments:
+#   vFlag - Version
+#   wFlag - World Name
+#   sFlag - Start world
+#   qFlag - Quit world
+#   rFlag - restart world
+#   RFlag - Remove World
+#   cFlag - Create World
+# Outputs:
+#   If Version set, write version to stdout
+#   If Server name set, write server name to stdout
+#   If Server name not set, write server name to stderr
+#   If no flags write help to stdout
+# Returns:
+#   None
+#######################################
+function main() {
   checkFlags $@
 
   if [ $vFlag ]
@@ -59,6 +89,24 @@ main() {
   fi
 }
 
+#######################################
+# Check flags specified
+# Globals:
+#   sFlag
+#   qFlag
+#   rFlag
+#   cFlag
+#   RFlag
+#   vFlag
+#   wFlag
+#   OPTARG
+# Arguments:
+#   None
+# Outputs:
+#   None
+# Returns:
+#   2 if no flags specified
+#######################################
 checkFlags() {
   sFlag=''
   qFlag=''
@@ -85,11 +133,24 @@ checkFlags() {
   done
 }
 
-# a function to print out error messages
-err() {
-  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
-}
-
+#######################################
+# Creates a new Terraria world
+# Globals:
+#   WORLDNAME
+#   PORT
+#   MOTD
+#   WSIZE
+#   DIFF
+#   SEED
+#   MAXPLAYERS
+#   PASSWORD
+# Arguments:
+#   None
+# Outputs:
+#   None
+# Returns:
+#   None
+#######################################
 create() {
   if [ -d $TERDIR ]
   then
