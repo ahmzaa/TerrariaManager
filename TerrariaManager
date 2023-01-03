@@ -46,13 +46,10 @@ function main() {
   if [ $wFlag ]
   then
     echo "Terraria Server Name: $WORLDNAME"
-  else
-    err "No World name provided"
-    exit
   fi
 
   # Location of Terraria files
-  TERDIR=/home/ahmza/terraria/$WORLDNAME/$VER
+  TERDIR=./servers/$WORLDNAME/$VER
 
   # Tmux session ID
   SESSION=terraria-$WORLDNAME
@@ -63,30 +60,44 @@ function main() {
   # Server Config
   CONFIG=${TERDIR}/server.cfg
 
+  if [ $dFlag ]
+  then
+    download
+    exit 0
+  fi
+
   if [ $sFlag ]
   then
     start
+    exit 0
   fi
 
   if [ $qFlag ]
   then
     quit
+    exit 0
   fi
 
   if [ $rFlag ]
   then
     restart
+    exit 0
   fi
 
   if [ $cFlag ]
   then
     create
+    exit 0
   fi
   
   if [ $RFlag ]
   then
     remove
+    exit 0
   fi
+
+help
+
 }
 
 #######################################
@@ -96,6 +107,7 @@ function main() {
 #   qFlag
 #   rFlag
 #   cFlag
+#   dFlag
 #   RFlag
 #   vFlag
 #   wFlag
@@ -112,25 +124,84 @@ checkFlags() {
   qFlag=''
   rFlag=''
   cFlag=''
+  dFlag=''
   RFlag=''
   vFlag=''
   wFlag=''
 
-  while getopts ":sqrcRvw:" flag; do
+  while getopts ":sqrcdRv:w:" flag; do
     case $flag in
       s)sFlag='true' ;;
       q)qFlag='true' ;;
       r)rFlag='true' ;;
       c)cFlag='true' ;;
+      d)dFlag='true' ;;
       R)RFlag='true' ;;
       v)vFlag='true' ;
         VER="$OPTARG" ;;
       w)wFlag='true' ;
         WORLDNAME="$OPTARG" ;;
-      *)help
+      *)help ;
         exit 2 ;;
     esac
   done
+}
+
+#######################################
+# Downloads the Terraria server binary.
+# Globals:
+#   VER
+#   SERVER_ZIP
+# Arguemnts:
+#   VER
+# Outputs:
+#   writes version to STDOUT
+# Returns:
+#   None
+#######################################
+download() {
+    SERVER_ZIP=./ver/terraria-server-$VER.zip
+
+    echo "Downloading version: $VER"
+    if [ ! -d ./ver ]
+    then
+      echo "Creating ver directory"
+      mkdir -p ./ver
+      echo
+    fi
+
+    if [ ! -f $SERVER_ZIP ]
+    then
+      curl -L "https://terraria.org/api/download/pc-dedicated-server/terraria-server-$VER.zip" > $SERVER_ZIP
+      echo
+      echo "Unzipping to folder: ./template/$VER"
+      if [ -d ./template/$VER ]
+      then
+        rm -r ./template/$VER
+        unzip -q $SERVER_ZIP -d ./template
+        echo
+      else
+        unzip -q $SERVER_ZIP -d ./template
+        echo
+      fi
+    else
+      echo "Unzipping to folder: ./template/$VER"
+      if [ -d ./template/$VER ]
+      then
+        rm -r ./template/$VER
+        unzip -q $SERVER_ZIP -d ./template
+        echo
+      else
+        unzip -q $SERVER_ZIP -d ./template
+        echo
+      fi
+    fi
+
+    echo "Moving files / folders"
+    rm -r ./template/$VER/Windows ./template/$VER/Mac
+    mv ./template/$VER/Linux/* ./template/$VER/
+    rm -r ./template/$VER/Linux
+    chmod +x ./template/$VER/TerrariaServer.bin.x86_64
 }
 
 #######################################
@@ -145,7 +216,7 @@ checkFlags() {
 #   MAXPLAYERS
 #   PASSWORD
 # Arguments:
-#   None
+#   WORLDNAME
 # Outputs:
 #   None
 # Returns:
@@ -157,10 +228,19 @@ create() {
     err "Server already exists"
   else
     echo "Creating Server..."
-    cp -r /home/ahmza/terraria/template /home/ahmza/terraria/$WORLDNAME
-    echo "Server Created"
-    echo "Modify server.cfg before running"
-
+    if [ -d ./servers ]
+    then
+      download
+      cp -r ./template ./servers/$WORLDNAME
+      echo "Server Created"
+      echo "Modify server.cfg before running"
+    else
+      download
+      mkdir -p ./servers
+      cp -r ./template ./servers/$WORLDNAME
+      echo "Server Created"
+      echo "Modify server.cfg before running"
+    fi
     read -p "Server Port: " PORT
     read -p "Message of the day: " MOTD
     read -p "World Size (1:Small, 2:Medium, 3:Large): " WSIZE
@@ -208,7 +288,7 @@ remove() {
   then
     echo "Removing Server..."
     quit
-    rm -r /home/ahmza/terraria/$WORLDNAME
+    rm -r $TERDIR
     rm -r /home/ahmza/.local/share/Terraria/Worlds/$WORLDNAME.*
     echo "Removed Server"
     exit 0
@@ -277,6 +357,7 @@ help() {
   echo "-q    Quit the server"
   echo "-r    Restart the server"
   echo "-c    Create a new server"
+  echo "-d    Downloads the Terraria server binary"
   echo "-R    Remove an existing server"
   echo "-w    Names of worlds/servers"
   echo
