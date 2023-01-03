@@ -49,7 +49,7 @@ function main() {
   fi
 
   # Location of Terraria files
-  TERDIR=./servers/$WORLDNAME/$VER
+  TERDIR="$PWD/servers/$WORLDNAME/$VER"
 
   # Tmux session ID
   SESSION=terraria-$WORLDNAME
