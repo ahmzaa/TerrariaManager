@@ -59,6 +59,7 @@ function main() {
   CONFIG=${TERDIR}/server.cfg
 
   if [ $dFlag ]; then
+    isUnzip
     download
     exit 0
   fi
@@ -223,20 +224,16 @@ download() {
     echo "Unzipping to folder: ./template/$VER"
     if [ -d ./template/$VER ]; then
       rm -r ./template/$VER
-      isUnzip
       unzip -q $SERVER_ZIP -d ./template
     else
-      isUnzip
       unzip -q $SERVER_ZIP -d ./template
     fi
   else
     echo "Unzipping to folder: ./template/$VER"
     if [ -d ./template/$VER ]; then
       rm -r ./template/$VER
-      isUnzip
       unzip -q $SERVER_ZIP -d ./template
     else
-      isUnzip
       unzip -q $SERVER_ZIP -d ./template
     fi
   fi
