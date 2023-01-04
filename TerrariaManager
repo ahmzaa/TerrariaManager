@@ -176,7 +176,7 @@ checkwrldname() {
 #   $UNZIP = 1
 #######################################
 isUnzip() {
-  if [ ! command -v unzip ] &>/dev/null;
+  if [ ! command -v unzipi &>/dev/null ];
   then
     while true; do
       read -p "unzip does not exist, would you like to install it (y/n) " yn
@@ -184,11 +184,11 @@ isUnzip() {
         [yY])
           sudo apt install unzip ;
           break ;;
-      [nN])
-        echo "Cant Proceed, Exiting." ;
-        exit ;;
-      *)
-        err "invalid response" ;;
+        [nN])
+          echo "Cant Proceed, Exiting." ;
+          exit ;;
+        *)
+          err "invalid response" ;;
       esac
     done
   fi
