@@ -10,7 +10,6 @@ err() {
   echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
 }
 
-
 #######################################
 # Function to call all functions.
 # Globals:
@@ -37,15 +36,13 @@ err() {
 function main() {
   checkFlags $@
 
-  if [ $vFlag ]
-  then
+  if [ $vFlag ]; then
     echo "Using Terraria Ver: $VER"
-  else  
+  else
     VER=1449
   fi
 
-  if [ $wFlag ]
-  then
+  if [ $wFlag ]; then
     echo "Terraria Server Name: $WORLDNAME"
   fi
 
@@ -61,43 +58,37 @@ function main() {
   # Server Config
   CONFIG=${TERDIR}/server.cfg
 
-  if [ $dFlag ]
-  then
+  if [ $dFlag ]; then
     download
     exit 0
   fi
 
-  if [ $sFlag ]
-  then
+  if [ $sFlag ]; then
     start
     exit 0
   fi
 
-  if [ $qFlag ]
-  then
+  if [ $qFlag ]; then
     quit
     exit 0
   fi
 
-  if [ $rFlag ]
-  then
+  if [ $rFlag ]; then
     restart
     exit 0
   fi
 
-  if [ $cFlag ]
-  then
+  if [ $cFlag ]; then
     create
     exit 0
   fi
-  
-  if [ $RFlag ]
-  then
+
+  if [ $RFlag ]; then
     remove
     exit 0
   fi
 
-help
+  help
 
 }
 
@@ -132,18 +123,24 @@ checkFlags() {
 
   while getopts ":sqrcdRv:w:" flag; do
     case $flag in
-      s)sFlag='true' ;;
-      q)qFlag='true' ;;
-      r)rFlag='true' ;;
-      c)cFlag='true' ;;
-      d)dFlag='true' ;;
-      R)RFlag='true' ;;
-      v)vFlag='true' ;
-        VER="$OPTARG" ;;
-      w)wFlag='true' ;
-        WORLDNAME="$OPTARG" ;;
-      *)help ;
-        exit 2 ;;
+    s) sFlag='true' ;;
+    q) qFlag='true' ;;
+    r) rFlag='true' ;;
+    c) cFlag='true' ;;
+    d) dFlag='true' ;;
+    R) RFlag='true' ;;
+    v)
+      vFlag='true'
+      VER="$OPTARG"
+      ;;
+    w)
+      wFlag='true'
+      WORLDNAME="$OPTARG"
+      ;;
+    *)
+      help
+      exit 2
+      ;;
     esac
   done
 }
@@ -160,13 +157,43 @@ checkFlags() {
 #   None
 #######################################
 checkwrldname() {
-  if [ -z $WORLDNAME ]
-  then
+  if [ -z $WORLDNAME ]; then
     err "Worldname not set. Use -w to set your worldname"
     exit 2
   fi
 }
 
+#######################################
+# Check if unzip is installed
+# Globals:
+#   $UNZIP
+# Arguments:
+#   NONE
+# Outputs:
+#   NONE
+# Returns:
+#   $UNZIP = 1
+#######################################
+isUnzip() {
+  if [ ! command -v unzip ] &>/dev/null; then
+    while true; do
+      read -p "unzip does not exist, would you like to install it (y/n) " yn
+      case $yn in
+      [yY])
+        sudo apt install unzip
+        break
+        ;;
+      [nN])
+        echo "Cant Proceed, Exiting."
+        exit
+        ;;
+      *)
+        err "invalid response"
+        ;;
+      esac
+    done
+  fi
+}
 
 #######################################
 # Downloads the Terraria server binary.
@@ -181,120 +208,44 @@ checkwrldname() {
 #   None
 #######################################
 download() {
-    SERVER_ZIP=./ver/terraria-server-$VER.zip
+  SERVER_ZIP=./ver/terraria-server-$VER.zip
 
-    echo "Downloading version: $VER"
-    if [ ! -d ./ver ]
-    then
-      echo "Creating ver directory"
-      mkdir -p ./ver
-      echo
-    fi
+  echo "Downloading version: $VER"
+  if [ ! -d ./ver ]; then
+    echo "Creating ver directory"
+    mkdir -p ./ver
+    echo
+  fi
 
-    if [ ! -f $SERVER_ZIP ]
-    then
-      curl -L "https://terraria.org/api/download/pc-dedicated-server/terraria-server-$VER.zip" > $SERVER_ZIP
-      echo
-      echo "Unzipping to folder: ./template/$VER"
-      if [ -d ./template/$VER ]
-      then
-        rm -r ./template/$VER
-        if [ ! command -v unzip &> /dev/null ]
-        then
-          while true; do
-            read -p "unzip does not exist, would you like to install it (y/n) " yn
-            case $yn in
-              [yY])
-                sudo apt install unzip ;
-                unzip -q $SERVER_ZIP -d ./template
-                break ;;
-              [nN])
-                echo "Cant Proceed, Exiting."
-                exit ;;
-              *)
-                err "invalid response" ;;
-            esac
-          done
-        else
-          unzip -q $SERVER_ZIP -d ./template
-        fi
-        echo
-      else
-        if [ ! command -v unzip &> /dev/null ]
-        then
-          while true; do
-            read -p "unzip does not exist, would you like to install it (y/n) " yn
-            case $yn in
-              [yY])
-                sudo apt install unzip ;
-                unzip -q $SERVER_ZIP -d ./template
-                break ;;
-              [nN])
-                echo "Cant Proceed, Exiting."
-                exit ;;
-              *)
-                err "invalid response" ;;
-            esac
-          done
-        else
-          unzip -q $SERVER_ZIP -d ./template
-        fi
-        echo
-      fi
+  if [ ! -f $SERVER_ZIP ]; then
+    curl -L "https://terraria.org/api/download/pc-dedicated-server/terraria-server-$VER.zip" >$SERVER_ZIP
+    echo
+    echo "Unzipping to folder: ./template/$VER"
+    if [ -d ./template/$VER ]; then
+      rm -r ./template/$VER
+      isUnzip
+      unzip -q $SERVER_ZIP -d ./template
     else
-      echo "Unzipping to folder: ./template/$VER"
-      if [ -d ./template/$VER ]
-      then
-        rm -r ./template/$VER
-        if [ ! command -v unzip &> /dev/null ]
-        then
-          while true; do
-            read -p "unzip does not exist, would you like to install it (y/n) " yn
-            case $yn in
-              [yY])
-                sudo apt install unzip ;
-                unzip -q $SERVER_ZIP -d ./template
-                break ;;
-              [nN])
-                echo "Cant Proceed, Exiting."
-                exit ;;
-              *)
-                err "invalid response" ;;
-            esac
-          done
-        else
-          unzip -q $SERVER_ZIP -d ./template
-        fi
-        echo
-      else
-        if [ ! command -v unzip &> /dev/null ]
-        then
-          while true; do
-            read -p "unzip does not exist, would you like to install it (y/n) " yn
-            case $yn in
-              [yY])
-                sudo apt install unzip ;
-                unzip -q $SERVER_ZIP -d ./template
-                break ;;
-              [nN])
-                echo "Cant Proceed, Exiting."
-                exit ;;
-              *)
-                err "invalid response" ;;
-            esac
-          done
-        else
-          unzip -q $SERVER_ZIP -d ./template
-        fi
-        echo
-      fi
+      isUnzip
+      unzip -q $SERVER_ZIP -d ./template
     fi
+  else
+    echo "Unzipping to folder: ./template/$VER"
+    if [ -d ./template/$VER ]; then
+      rm -r ./template/$VER
+      isUnzip
+      unzip -q $SERVER_ZIP -d ./template
+    else
+      isUnzip
+      unzip -q $SERVER_ZIP -d ./template
+    fi
+  fi
 
-    echo "Moving files / folders"
-    rm -r ./template/$VER/Windows ./template/$VER/Mac
-    mv ./template/$VER/Linux/* ./template/$VER/
-    rm -r ./template/$VER/Linux
-    chmod +x ./template/$VER/TerrariaServer.bin.x86_64
+  echo "Moving files / folders"
+  rm -r ./template/$VER/Windows ./template/$VER/Mac
+  mv ./template/$VER/Linux/* ./template/$VER/
+  rm -r ./template/$VER/Linux
+  chmod +x ./template/$VER/TerrariaServer.bin.x86_64
 }
 
 #######################################
@@ -317,13 +268,11 @@ download() {
 #######################################
 create() {
   checkwrldname
-  if [ -d $TERDIR ]
-  then
+  if [ -d $TERDIR ]; then
     err "Server already exists"
   else
     echo "Creating Server..."
-    if [ -d ./servers ]
-    then
+    if [ -d ./servers ]; then
       download
       cp -r ./template ./servers/$WORLDNAME
       echo "Server Created"
@@ -344,33 +293,36 @@ create() {
     read -p "Server Password: " PASSWORD
 
     touch $CONFIG
-    echo "world=$HOME/.local/share/Terraria/Worlds/$WORLDNAME" >> $CONFIG
-    echo "port=$PORT" >> $CONFIG
-    echo "upnp=0" >> $CONFIG
-    echo "motd=$MOTD" >> $CONFIG
-    echo "autocreate=$WSIZE" >> $CONFIG
-    echo "worldname=$WORLDNAME" >> $CONFIG
-    echo "difficulty=$DIFF" >> $CONFIG
-    echo "seed=$SEED" >> $CONFIG
-    echo "maxplayers=$MAXPLAYERS" >> $CONFIG
-    echo "npcstream=60" >> $CONFIG
-    echo "priority=1" >> $CONFIG
-    echo "password=$PASSWORD" >> $CONFIG
-    echo "banlist=banlist.txt" >> $CONFIG
-    echo "secure=0" >> $CONFIG
-    echo "worldpath=$HOME/.local/share/Terraria/Worlds" >> $CONFIG
-    echo "language=en-US" >> $CONFIG
+    echo "world=$HOME/.local/share/Terraria/Worlds/$WORLDNAME" >>$CONFIG
+    echo "port=$PORT" >>$CONFIG
+    echo "upnp=0" >>$CONFIG
+    echo "motd=$MOTD" >>$CONFIG
+    echo "autocreate=$WSIZE" >>$CONFIG
+    echo "worldname=$WORLDNAME" >>$CONFIG
+    echo "difficulty=$DIFF" >>$CONFIG
+    echo "seed=$SEED" >>$CONFIG
+    echo "maxplayers=$MAXPLAYERS" >>$CONFIG
+    echo "npcstream=60" >>$CONFIG
+    echo "priority=1" >>$CONFIG
+    echo "password=$PASSWORD" >>$CONFIG
+    echo "banlist=banlist.txt" >>$CONFIG
+    echo "secure=0" >>$CONFIG
+    echo "worldpath=$HOME/.local/share/Terraria/Worlds" >>$CONFIG
+    echo "language=en-US" >>$CONFIG
 
     while true; do
       read -p "Would you like to start server: $WORLDNAME (y/n) " yn
       case $yn in
-        [yY])
-          start ;
-          break ;;
-        [nN])
-          exit ;;
-        *)
-          err "invalid response" ;;
+      [yY])
+        start
+        break
+        ;;
+      [nN])
+        exit
+        ;;
+      *)
+        err "invalid response"
+        ;;
       esac
     done
     exit 0
@@ -379,8 +331,7 @@ create() {
 
 remove() {
   checkwrldname
-  if [ -d $TERDIR ]
-  then
+  if [ -d $TERDIR ]; then
     echo "Removing Server..."
     quit
     rm -r $TERDIR
@@ -397,10 +348,8 @@ start() {
   ARGS="-config ${CONFIG}"
   CMD="${SERVER} ${ARGS}"
 
-  if [ -d $TERDIR ]
-  then
-    if tmux has-session -t $SESSION
-    then
+  if [ -d $TERDIR ]; then
+    if tmux has-session -t $SESSION; then
       echo "Starting Terraria Server $WORLDNAME... "
       tmux send-keys -t ${SESSION} "$CMD" C-m
       echo "Server started"
@@ -415,13 +364,16 @@ start() {
     while true; do
       read -p "Would you like to create it (y/n) " yn
       case $yn in
-        [yY])
-          create ;
-          break ;;
-        [nN])
-          exit ;;
-        *)
-          err "invalid response" ;;
+      [yY])
+        create
+        break
+        ;;
+      [nN])
+        exit
+        ;;
+      *)
+        err "invalid response"
+        ;;
       esac
     done
   fi
@@ -429,8 +381,7 @@ start() {
 
 quit() {
   checkwrldname
-  if tmux has-session -t $SESSION
-  then
+  if tmux has-session -t $SESSION; then
     tmux send-keys -t ${SESSION} "exit" C-m
     echo "Stopped Server $WORLDNAME"
   else
