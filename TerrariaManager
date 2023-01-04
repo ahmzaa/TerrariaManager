@@ -229,6 +229,7 @@ download() {
                 err "invalid response" ;;
             esac
           done
+        fi
         echo
       else
         if [ command -v unzip &> /dev/null ]
@@ -249,6 +250,7 @@ download() {
                 err "invalid response" ;;
             esac
           done
+        fi
         echo
       fi
     fi
