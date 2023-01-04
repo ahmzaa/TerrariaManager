@@ -4,14 +4,15 @@
 # Manage Terraria Servers
 
 #######################################
-# Used when printing error messages
+# prints error messages to STDOUT & STDERR
 #######################################
 err() {
   echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
 }
 
+
 #######################################
-# When the script is called. This is the "main" function.
+# Function to call all functions.
 # Globals:
 #   VER
 #   TERDIR
@@ -148,6 +149,26 @@ checkFlags() {
 }
 
 #######################################
+# Check if $WORLDNAME is set
+# Globals:
+#   $WORLDNAME
+# Arguments:
+#   $WORLDNAME
+# Outputs:
+#   If no $WORLDNAME output to STDOUT & STDERR using err()
+# Returns:
+#   None
+#######################################
+checkwrldname() {
+  if [ -z $WORLDNAME ]
+  then
+    err "Worldname not set. Use -w to set your worldname"
+    exit 2
+  fi
+}
+
+
+#######################################
 # Downloads the Terraria server binary.
 # Globals:
 #   VER
@@ -223,6 +244,7 @@ download() {
 #   None
 #######################################
 create() {
+  checkwrldname
   if [ -d $TERDIR ]
   then
     err "Server already exists"
@@ -284,6 +306,7 @@ create() {
 }
 
 remove() {
+  checkwrldname
   if [ -d $TERDIR ]
   then
     echo "Removing Server..."
@@ -298,6 +321,7 @@ remove() {
 }
 
 start() {
+  checkwrldname
   ARGS="-config ${CONFIG}"
   CMD="${SERVER} ${ARGS}"
 
@@ -332,6 +356,7 @@ start() {
 }
 
 quit() {
+  checkwrldname
   if tmux has-session -t $SESSION
   then
     tmux send-keys -t ${SESSION} "exit" C-m
