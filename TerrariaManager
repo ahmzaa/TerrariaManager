@@ -210,10 +210,45 @@ download() {
       if [ -d ./template/$VER ]
       then
         rm -r ./template/$VER
-        unzip -q $SERVER_ZIP -d ./template
+
+        if [ command -v unzip &> /dev/null ]
+        then
+          unzip -q $SERVER_ZIP -d ./template
+        else
+          while true; do
+            read -p "unzip does not exist, would you like to install it (y/n) " yn
+            case $yn in
+              [yY])
+                sudo apt install unzip ;
+                unzip -q $SERVER_ZIP -d ./template
+                break ;;
+              [nN])
+                echo "Cant Proceed, Exiting."
+                exit ;;
+              *)
+                err "invalid response" ;;
+            esac
+          done
         echo
       else
-        unzip -q $SERVER_ZIP -d ./template
+        if [ command -v unzip &> /dev/null ]
+        then
+          unzip -q $SERVER_ZIP -d ./template
+        else
+          while true; do
+            read -p "unzip does not exist, would you like to install it (y/n) " yn
+            case $yn in
+              [yY])
+                sudo apt install unzip ;
+                unzip -q $SERVER_ZIP -d ./template
+                break ;;
+              [nN])
+                echo "Cant Proceed, Exiting."
+                exit ;;
+              *)
+                err "invalid response" ;;
+            esac
+          done
         echo
       fi
     fi
