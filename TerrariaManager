@@ -176,7 +176,7 @@ checkwrldname() {
 #   $UNZIP = 1
 #######################################
 isUnzip() {
-  if ! command -v unzipi &>/dev/null;
+  if ! command -v unzip &>/dev/null;
   then
     while true; do
       read -p "unzip does not exist, would you like to install it (y/n) " yn
@@ -188,6 +188,7 @@ isUnzip() {
           echo "Cant Proceed, Exiting." ;
           exit ;;
         *)
+          echo
           err "invalid response" ;;
       esac
     done
@@ -324,6 +325,18 @@ create() {
   fi
 }
 
+
+#######################################
+# Removes a Terraria world
+# Globals:
+#   WORLDNAME
+# Arguments:
+#   WORLDNAME
+# Outputs:
+#   None
+# Returns:
+#   None
+#######################################
 remove() {
   checkwrldname
   if [ -d $TERDIR ]; then
@@ -338,6 +351,18 @@ remove() {
   fi
 }
 
+
+#######################################
+# Starts a Terraria world
+# Globals:
+#   WORLDNAME
+# Arguments:
+#   WORLDNAME
+# Outputs:
+#   None
+# Returns:
+#   None
+#######################################
 start() {
   checkwrldname
   ARGS="-config ${CONFIG}"
@@ -374,6 +399,18 @@ start() {
   fi
 }
 
+
+#######################################
+# Quits or stops a Terraria world
+# Globals:
+#   WORLDNAME
+# Arguments:
+#   WORLDNAME
+# Outputs:
+#   None
+# Returns:
+#   None
+#######################################
 quit() {
   checkwrldname
   if tmux has-session -t $SESSION; then
@@ -384,11 +421,34 @@ quit() {
   fi
 }
 
+#######################################
+# Restart a Terraria world making use of the start and quit functions
+# Globals:
+#   None
+# Arguments:
+#   None
+# Outputs:
+#   None
+# Returns:
+#   None
+#######################################
 restart() {
   quit
   start
 }
 
+
+#######################################
+# Displays all the options for the script
+# Globals:
+#   None
+# Arguments:
+#   $0
+# Outputs:
+#   None
+# Returns:
+#   None
+#######################################
 help() {
   echo "Manage Terraria Servers"
   echo
